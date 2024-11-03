@@ -23,15 +23,14 @@ app.use('/event', require('./routes/eventRoutes'));
 
 
 
-
-schedule('12 22 * * *', () => {
+schedule('0 0 * * *', () => {
     console.log('Запуск задачи парсинга данных в 00:00 по Москве');
     parseKinoAfisha()
-        .then(data => console.log(data)) // Выводим данные в консоль
+        .then(data => console.log("Успешное обновление".green))
         .catch(console.error);
 }, {
     scheduled: true,
-    timezone: "Europe/Moscow" // Указываем часовой пояс для Москвы
+    timezone: "Europe/Moscow"
 });
 
 

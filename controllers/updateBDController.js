@@ -1,49 +1,11 @@
-// const asyncHandler = require("express-async-handler");
-// const axios = require('axios');
-// const cheerio = require('cheerio');
-//
-// const parseKinoAfisha = asyncHandler(async (req, res) => {
-//     const movies = [];
-//     const url = 'https://nn.kinoafisha.info/movies/';
-//
-//     const site1 = [];
-//     try {
-//         const { data: site1Data } = await axios.get(url);
-//         const $site1 = cheerio.load(site1Data);
-//
-//         const moviePromises = $site1('.site_content .movies .grid_cell9 .movieList .movieList_item').map(async (index, element) => {
-//             const title = $site1(element).find('.movieItem_title').text().trim();
-//             const subTitle = $site1(element).find('.movieItem_subtitle').text().trim();
-//             const tags = $site1(element).find('.movieItem_details .movieItem_genres').text().trim();
-//             const yearAndContries = $site1(element).find('.movieItem_details .movieItem_year').text().trim();
-//             const img = $site1(element).find('.movieItem_poster .picture_image').attr('data-picture');
-//             const uid = JSON.parse($site1(element).find('.movieItem_actions .movieItem_favBtn').attr('data-param')).uid;
-//
-//             site1.push({
-//                 title,
-//                 subTitle,
-//                 img,
-//                 tags,
-//                 yearAndContries,
-//                 uid,
-//             });
-//         })
-//
-//     }  catch (err) {
-//         console.log(err)
-//     }
-//
-// });
-//
-// cron.schedule('50 20 * * *', () => {
-//     console.log('Запуск обновления данных каждый день в полночь');
-//     parseKinoAfisha();
-// });
-
-
-
 const axios = require('axios');
 const cheerio = require('cheerio');
+// -----------------------------
+const Kino = require('../models/kinoModels');
+
+
+
+
 
 async function fetchDataFromFirstSite() {
     const url = 'https://nn.kinoafisha.info/movies/'; // Замените на URL первого сайта
@@ -72,7 +34,6 @@ async function fetchDataFromFirstSite() {
                 uid,
             });
         })
-    console.log(data)
     return data;
 }
 
@@ -81,11 +42,9 @@ async function fetchDataFromSecondSite(uid) {
     const response = await axios.get(url);
     const $ = cheerio.load(response.data);
 
-    console.log(url)
     const additionalData = {
         details: $('.visualEditorInsertion p').text().trim() || $('.visualEditorInsertion section section article section').text().trim() // Получаем дополнительные данные
     };
-    console.log(additionalData)
     return additionalData;
 }
 
@@ -99,7 +58,8 @@ async function parseKinoAfisha() {
         combinedDataArray.push(combinedData); // Добавляем в массив
     }
 
-    return combinedDataArray;
+    await Kino.deleteMany({})
+    await Kino.create({kino:combinedDataArray})
 }
 
 module.exports = {

@@ -1,14 +1,14 @@
 const express = require('express');
 // -------------------------------
 const { protect } = require('../middleware/authMiddleware');
-const { parseKinoAfisha } = require('../controllers/eventController')
+const { kinoPrint } = require('../controllers/eventController')
 const router = express.Router();
 
 // POST
 
 
 // GET
-router.get('/parseKinoAfisha', protect, parseKinoAfisha);
+router.get('/kinoPrint', protect, kinoPrint);
 
 
 module.exports = router;
