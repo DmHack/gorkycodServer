@@ -7,7 +7,7 @@ const { schedule } = require("node-cron");
 
 // ----------
 const connectDB = require('./config/db');
-const {parseKinoAfisha} = require("./controllers/updateBDController");
+const { parseKinoAfisha } = require("./controllers/updateBDController");
 
 const PORT = process.env.PORT || 5000;
 const app = express();
@@ -24,11 +24,15 @@ app.use('/event', require('./routes/eventRoutes'));
 
 
 
-schedule('28 21 * * *', () => {
-    console.log('Запуск обновления данных каждый день в полночь');
-    parseKinoAfisha();
+schedule('12 22 * * *', () => {
+    console.log('Запуск задачи парсинга данных в 00:00 по Москве');
+    parseKinoAfisha()
+        .then(data => console.log(data)) // Выводим данные в консоль
+        .catch(console.error);
+}, {
+    scheduled: true,
+    timezone: "Europe/Moscow" // Указываем часовой пояс для Москвы
 });
-
 
 
 app.listen(PORT, () => {

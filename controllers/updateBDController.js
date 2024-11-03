@@ -77,22 +77,20 @@ async function fetchDataFromFirstSite() {
 }
 
 async function fetchDataFromSecondSite(uid) {
-    const url = `https://nn.kinoafisha.info/movies/${uid}`; // Замените на URL второго сайта
+    const url = `https://www.kinoafisha.info/movies/${uid}/#submenu`; // Замените на URL второго сайта
     const response = await axios.get(url);
     const $ = cheerio.load(response.data);
 
-    // Пример парсинга данных со второго сайта
+    console.log(url)
     const additionalData = {
-        details: $(element).find('.visualEditorInsertion p').text().trim() || $(element).find('.visualEditorInsertion section section article section').text().trim() // Получаем дополнительные данные
+        details: $('.visualEditorInsertion p').text().trim() || $('.visualEditorInsertion section section article section').text().trim() // Получаем дополнительные данные
     };
     console.log(additionalData)
     return additionalData;
 }
 
 async function parseKinoAfisha() {
-    console.log("start")
     const combinedDataArray = [];
-    console.log("start")
     const firstSiteData = await fetchDataFromFirstSite();
 
     for (const item of firstSiteData) {
@@ -101,7 +99,9 @@ async function parseKinoAfisha() {
         combinedDataArray.push(combinedData); // Добавляем в массив
     }
 
-    console.log(combinedDataArray);
+    return combinedDataArray;
 }
 
-module.exports = parseKinoAfisha;
+module.exports = {
+    parseKinoAfisha
+};
