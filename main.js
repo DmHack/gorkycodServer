@@ -23,16 +23,19 @@ app.use('/event', require('./routes/eventRoutes'));
 
 
 
-schedule('0 0 * * *', () => {
-    console.log('Запуск задачи парсинга данных в 00:00 по Москве');
-    parseKinoAfisha()
-        .then(data => console.log("Успешное обновление".green))
-        .catch(console.error);
-}, {
-    scheduled: true,
-    timezone: "Europe/Moscow"
-});
+// schedule('54 10 * * *', () => {
+//     console.log('Запуск задачи парсинга данных в 00:00 по Москве');
+//     parseKinoAfisha()
+//         .then(data => console.log("Успешное обновление".green))
+//         .catch(console.error);
+// }, {
+//     scheduled: true,
+//     timezone: "Europe/Moscow"
+// });
 
+parseKinoAfisha()
+    .then(data => console.log("Успешное обновление".green))
+    .catch(console.error);
 
 app.listen(PORT, () => {
     console.log(`Server started on PORT ${PORT}`.green);

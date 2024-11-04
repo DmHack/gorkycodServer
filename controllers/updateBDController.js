@@ -2,6 +2,7 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 // -----------------------------
 const Kino = require('../models/kinoModels');
+const {login} = require("./userController");
 
 
 
@@ -43,10 +44,59 @@ async function fetchDataFromSecondSite(uid) {
     const $ = cheerio.load(response.data);
 
     const additionalData = {
-        details: $('.visualEditorInsertion p').text().trim() || $('.visualEditorInsertion section section article section').text().trim() // Получаем дополнительные данные
+        details: $('.visualEditorInsertion p').text().trim() || $('.visualEditorInsertion section section article section').text().trim(),
     };
     return additionalData;
 }
+
+async function fetchDataFromSecondSite1(uid) {
+    const url = `https://nn.kinoafisha.info/movies/${uid}/#schedule`; // Replace with the second site's URL
+    const response = await axios.get(url);
+    const $ = cheerio.load(response.data);
+
+    const cinemas = [];
+    const additionalData1 = [];
+    const additionalData2 = [];
+
+    // Extract cinema information
+    $('.showtimesCinema .showtimesCinema_wrapper .showtimesCinema_info').each(function() {
+        const nameKinoteatr = $(this).find('.showtimesCinema_name').text().trim();
+        const addrKinoteatr = $(this).find('.showtimesCinema_addr').text().trim() ||
+            `Метро ${$(this).find('.showtimesCinema_metro .showtimesCinema_metroItem').text().trim()}`;
+
+        additionalData1.push({
+            nameKinoteatr,
+            addrKinoteatr
+        });
+    });
+
+    // Extract session information
+    $('.showtimes_cell').each(function() {
+        const format = $(this).find('.showtimes_format').text().trim();
+        const sessionsTime = $(this).find('.showtimes_sessions .showtimes_session .session_time').text().trim();
+        const sessionsPrice = $(this).find('.showtimes_sessions .showtimes_session .session_price').text().trim();
+
+        additionalData2.push({
+            format,
+            sessionsTime,
+            sessionsPrice
+        });
+    });
+
+    // Combine data into a single array of objects
+    for (let i = 0; i < Math.max(additionalData1.length, additionalData2.length); i++) {
+        const cinemaData = {
+            ...additionalData1[i], // Spread operator to include cinema data
+            ...additionalData2[i]  // Spread operator to include session data
+        };
+        cinemas.push(cinemaData);
+    }
+
+    return cinemas;
+}
+
+
+
 
 async function parseKinoAfisha() {
     const combinedDataArray = [];
@@ -54,7 +104,8 @@ async function parseKinoAfisha() {
 
     for (const item of firstSiteData) {
         const additionalData = await fetchDataFromSecondSite(item.uid);
-        const combinedData = { ...item, ...additionalData }; // Объединяем объекты
+        const additionalData1 = await fetchDataFromSecondSite1(item.uid)
+        const combinedData = { ...item, ...additionalData, dopInfa:additionalData1 }; // Объединяем объекты
         combinedDataArray.push(combinedData); // Добавляем в массив
     }
 
