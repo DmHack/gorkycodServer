@@ -1,7 +1,7 @@
 const express = require('express');
 // -------------------------------
 const { protect } = require('../middleware/authMiddleware');
-const { kinoPrint } = require('../controllers/eventController')
+const { kinoPrint, newsPrint } = require('../controllers/eventController')
 const router = express.Router();
 
 // POST
@@ -9,6 +9,7 @@ const router = express.Router();
 
 // GET
 router.get('/kinoPrint', protect, kinoPrint);
+router.get('/newsPrint', protect, newsPrint);
 
 
 module.exports = router;

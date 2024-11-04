@@ -1,8 +1,9 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
+const asyncHandler = require("express-async-handler");
 // -----------------------------
 const Kino = require('../models/kinoModels');
-const {login} = require("./userController");
+const News = require('../models/newsModel');
 
 
 
@@ -119,7 +120,6 @@ async function parseKinoAfisha() {
         const combinedData = { ...item, ...additionalData, dopInfa:additionalData1 }; // Объединяем объекты
         combinedDataArray.push(combinedData); // Добавляем в массив
     }
-    console.log(combinedDataArray)
 
     await Kino.deleteMany({})
     await Kino.create({kino:combinedDataArray})
@@ -127,6 +127,74 @@ async function parseKinoAfisha() {
 
 
 
+
+
+const helpParseNews = asyncHandler(async (urlNews) => {
+    const url = urlNews; // Замените на URL первого сайта
+    const response = await axios.get(url);
+    const $ = cheerio.load(response.data);
+
+    const data = [];
+
+    const { data: site1Data } = await axios.get(url);
+    const $site1 = cheerio.load(site1Data);
+    const text = $site1('.single-news__text p').text().trim();
+    return text
+
+
+})
+
+
+
+const parseNews = asyncHandler(async (req, res) => {
+    const result = []
+    const url = 'https://nobl.ru/novosti-nizhegorodskoj-oblasti-za-vse-vremya/?page=1'; // Замените на URL первого сайта
+    const response = await axios.get(url);
+    const $ = cheerio.load(response.data);
+
+    const data = [];
+
+    const { data: site1Data } = await axios.get(url);
+    const $site1 = cheerio.load(site1Data);
+
+    const newsPromises = $site1('.news-page__inner .news-card-common').map(async (index, element) => {
+        const title = $site1(element).find('.news-card-common__inner .news-card-common__title').text().trim();
+        const tag = $site1(element).find('.news-card-common__inner .news-card-common__tags .tag-common').text().trim() || "Новости";
+        const img = `https://nobl.ru${$site1(element).find('.news-card-common__img-wrap picture .news-card-common__img').attr('data-src')}`
+
+        const dataNews = `${$site1(element).find('.news-card-common__inner .news-card-common__date-time .news-card-common__date').text().trim()} ${$site1(element).find('.news-card-common__inner .news-card-common__date-time .news-card-common__time').text().trim()}`;
+        const ssl = `https://nobl.ru${$(element).attr('href')}`
+        // const uid = JSON.parse($site1(element).find('.movieItem_actions .movieItem_favBtn').attr('data-param')).uid;
+
+        data.push({
+            title,
+            tag,
+            img,
+            dataNews,
+            ssl
+        });
+        })
+
+    const massPolnNews = []
+
+    for (const item of data) {
+        const text = await helpParseNews(item.ssl);
+
+        massPolnNews.push({
+            text
+        })
+    }
+
+    for (let i = 0; i < Math.max(massPolnNews.length, data.length); i++) {
+        const cinemaData = {
+            ...data[i],  // Оператор распространения для включения данных о сеансах
+            ...massPolnNews[i] // Оператор распространения для включения данных о кинотеатре
+        };
+        result.push(cinemaData);
+    }
+    await News.deleteMany({})
+    await News.create({news: result})
+})
 
 
 
@@ -142,5 +210,6 @@ async function parseKinoAfisha() {
 
 
 module.exports = {
-    parseKinoAfisha
+    parseKinoAfisha,
+    parseNews
 };

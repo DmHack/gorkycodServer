@@ -7,7 +7,7 @@ const { schedule } = require("node-cron");
 
 // ----------
 const connectDB = require('./config/db');
-const { parseKinoAfisha } = require("./controllers/updateBDController");
+const { parseKinoAfisha, parseNews} = require("./controllers/updateBDController");
 
 const PORT = process.env.PORT || 5000;
 const app = express();
@@ -26,16 +26,24 @@ app.use('/event', require('./routes/eventRoutes'));
 schedule('0 0 * * *', () => {
     console.log('Запуск задачи парсинга данных в 00:00 по Москве');
     parseKinoAfisha()
-        .then(data => console.log("Успешное обновление".green))
+        .then(data => console.log("Успешное обновление кино".green))
         .catch(console.error);
+
 }, {
     scheduled: true,
     timezone: "Europe/Moscow"
 });
 
-// parseKinoAfisha()
-//     .then(data => console.log("Успешное обновление".green))
-//     .catch(console.error);
+schedule('0 * * * *', () => {
+    console.log('Запуск задачи парсинга данных каждый час по Москве');
+    parseNews()
+        .then(data => console.log("Успешное обновление новостей".green))
+        .catch(console.error);
+
+}, {
+    scheduled: true,
+    timezone: "Europe/Moscow"
+});
 
 app.listen(PORT, () => {
     console.log(`Server started on PORT ${PORT}`.green);
