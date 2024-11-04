@@ -6,8 +6,6 @@ const {login} = require("./userController");
 
 
 
-
-
 async function fetchDataFromFirstSite() {
     const url = 'https://nn.kinoafisha.info/movies/'; // Замените на URL первого сайта
     const response = await axios.get(url);
@@ -50,7 +48,7 @@ async function fetchDataFromSecondSite(uid) {
 }
 
 async function fetchDataFromSecondSite1(uid) {
-    const url = `https://nn.kinoafisha.info/movies/${uid}/#schedule`; // Replace with the second site's URL
+    const url = `https://nn.kinoafisha.info/movies/${uid}/#schedule`; // Замените на URL второго сайта
     const response = await axios.get(url);
     const $ = cheerio.load(response.data);
 
@@ -58,7 +56,7 @@ async function fetchDataFromSecondSite1(uid) {
     const additionalData1 = [];
     const additionalData2 = [];
 
-    // Extract cinema information
+    // Извлечение информации о кинотеатрах
     $('.showtimesCinema .showtimesCinema_wrapper .showtimesCinema_info').each(function() {
         const nameKinoteatr = $(this).find('.showtimesCinema_name').text().trim();
         const addrKinoteatr = $(this).find('.showtimesCinema_addr').text().trim() ||
@@ -70,33 +68,46 @@ async function fetchDataFromSecondSite1(uid) {
         });
     });
 
-    // Extract session information
+    // Извлечение информации о сеансах
     $('.showtimes_cell').each(function() {
         const format = $(this).find('.showtimes_format').text().trim();
-        const sessionsTime = $(this).find('.showtimes_sessions .showtimes_session .session_time').text().trim();
-        const sessionsPrice = $(this).find('.showtimes_sessions .showtimes_session .session_price').text().trim();
 
-        additionalData2.push({
-            format,
-            sessionsTime,
-            sessionsPrice
+        // Инициализация массивов для sessionsTime и sessionsPrice
+        const sessionsTimeArray = [];
+        const sessionsPriceArray = [];
+
+        // Цикл по каждому сеансу в ячейке
+        $(this).find('.showtimes_sessions .showtimes_session').each(function() {
+            const sessionsTime = $(this).find('.session_time').text().trim();
+            const sessionsPrice = $(this).find('.session_price').text().trim();
+
+            // Добавление в соответствующие массивы, если данные есть
+            if (sessionsTime && sessionsPrice) {
+                sessionsTimeArray.push(sessionsTime);
+                sessionsPriceArray.push(sessionsPrice);
+            }
         });
+
+        // Добавление в additionalData2 только если есть данные о сеансах
+        if (sessionsTimeArray.length > 0 || sessionsPriceArray.length > 0) {
+            additionalData2.push({
+                format,
+                sessionsTime: sessionsTimeArray,
+                sessionsPrice: sessionsPriceArray
+            });
+        }
     });
 
-    // Combine data into a single array of objects
+    // Объединение данных в один массив объектов
     for (let i = 0; i < Math.max(additionalData1.length, additionalData2.length); i++) {
         const cinemaData = {
-            ...additionalData1[i], // Spread operator to include cinema data
-            ...additionalData2[i]  // Spread operator to include session data
+            ...additionalData1[i], // Оператор распространения для включения данных о кинотеатре
+            ...additionalData2[i]  // Оператор распространения для включения данных о сеансах
         };
         cinemas.push(cinemaData);
     }
-
     return cinemas;
 }
-
-
-
 
 async function parseKinoAfisha() {
     const combinedDataArray = [];
@@ -108,10 +119,27 @@ async function parseKinoAfisha() {
         const combinedData = { ...item, ...additionalData, dopInfa:additionalData1 }; // Объединяем объекты
         combinedDataArray.push(combinedData); // Добавляем в массив
     }
+    console.log(combinedDataArray)
 
     await Kino.deleteMany({})
     await Kino.create({kino:combinedDataArray})
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 module.exports = {
     parseKinoAfisha
