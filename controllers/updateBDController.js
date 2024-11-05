@@ -124,7 +124,7 @@ async function parseKinoAfisha() {
     await Kino.deleteMany({})
     await Kino.create({kino:combinedDataArray})
 }
-
+// --------------------------------
 
 
 
@@ -195,16 +195,6 @@ const parseNews = asyncHandler(async (req, res) => {
     await News.deleteMany({})
     await News.create({news: result})
 })
-
-
-
-
-
-
-
-
-
-
 
 
 
