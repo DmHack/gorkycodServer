@@ -2,9 +2,7 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const asyncHandler = require("express-async-handler");
 // -----------------------------
-const Kino = require('../models/kinoModels');
-const News = require('../models/newsModel');
-
+const Events = require('../models/eventsModels');
 
 
 async function fetchDataFromFirstSite() {
@@ -121,12 +119,12 @@ async function parseKinoAfisha() {
         combinedDataArray.push(combinedData); // Добавляем в массив
     }
 
-    await Kino.deleteMany({})
-    await Kino.create({kino:combinedDataArray})
+    await Events.findOneAndUpdate({}, {kino: combinedDataArray}, {
+        new: true,
+        upsert: true,
+    });
 }
 // --------------------------------
-
-
 
 
 const helpParseNews = asyncHandler(async (urlNews) => {
@@ -140,8 +138,6 @@ const helpParseNews = asyncHandler(async (urlNews) => {
     const $site1 = cheerio.load(site1Data);
     const text = $site1('.single-news__text p').text().trim();
     return text
-
-
 })
 
 
@@ -159,7 +155,8 @@ const parseNews = asyncHandler(async (req, res) => {
 
     const newsPromises = $site1('.news-page__inner .news-card-common').map(async (index, element) => {
         const title = $site1(element).find('.news-card-common__inner .news-card-common__title').text().trim();
-        const tag = $site1(element).find('.news-card-common__inner .news-card-common__tags .tag-common').text().trim() || "Новости";
+        const tag = $site1(element).find('.news-card-common__inner .news-card-common__tags .tag-common').first().text().trim() || "Новости";
+        console.log(tag);
         const img = `https://nobl.ru${$site1(element).find('.news-card-common__img-wrap picture .news-card-common__img').attr('data-src')}`
 
         const dataNews = `${$site1(element).find('.news-card-common__inner .news-card-common__date-time .news-card-common__date').text().trim()} ${$site1(element).find('.news-card-common__inner .news-card-common__date-time .news-card-common__time').text().trim()}`;
@@ -192,9 +189,14 @@ const parseNews = asyncHandler(async (req, res) => {
         };
         result.push(cinemaData);
     }
-    await News.deleteMany({})
-    await News.create({news: result})
+    await Events.findOneAndUpdate({}, {news: result}, {
+        new: true,
+        upsert: true,
+    });
 })
+
+
+
 
 
 

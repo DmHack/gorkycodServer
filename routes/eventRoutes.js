@@ -1,7 +1,7 @@
 const express = require('express');
 // -------------------------------
 const { protect } = require('../middleware/authMiddleware');
-const { kinoPrint, newsPrint } = require('../controllers/eventController')
+const { kinoPrint, newsPrint} = require('../controllers/eventController')
 const router = express.Router();
 
 // POST

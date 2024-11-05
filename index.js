@@ -12,7 +12,6 @@ const { parseKinoAfisha, parseNews} = require("./controllers/updateBDController"
 const PORT = process.env.PORT || 5000;
 const app = express();
 connectDB();
-
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cors({ credentials: true, origin: '*' }));
@@ -44,6 +43,14 @@ schedule('0 * * * *', () => {
     scheduled: true,
     timezone: "Europe/Moscow"
 });
+
+// parseKinoAfisha()
+//     .then(data => console.log("Успешное обновление кино".green))
+//     .catch(console.error);
+parseNews()
+    .then(data => console.log("Успешное обновление новостей".green))
+    .catch(console.error);
+
 
 app.listen(PORT, () => {
     console.log(`Server started on PORT ${PORT}`.green);

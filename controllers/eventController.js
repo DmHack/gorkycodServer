@@ -1,12 +1,12 @@
 const asyncHandler = require("express-async-handler");
 // ------------------
-const Kino = require('../models/kinoModels')
-const News = require("../models/newsModel");
-const kinoPrint = asyncHandler(async (req, res) => {
-    const kino = await Kino.find({});
+const Events = require('../models/eventsModels')
 
-    if (kino) {
-        res.status(200).json(kino[0].kino)
+const kinoPrint = asyncHandler(async (req, res) => {
+    const Event = await Events.find({});
+
+    if (Event) {
+        res.status(200).json(Event[0].kino)
     } else {
         res.status(200).json({
             message: "Error kinoPrint"
@@ -15,13 +15,13 @@ const kinoPrint = asyncHandler(async (req, res) => {
 })
 
 const newsPrint = asyncHandler(async (req, res) => {
-    const kino = await News.find({});
+    const Event = await Events.find({});
 
-    if (kino) {
-        res.status(200).json(kino[0].news)
+    if (Event) {
+        res.status(200).json(Event[0].news)
     } else {
         res.status(200).json({
-            message: "Error kinoPrint"
+            message: "Error newsPrint"
         })
     }
 })
