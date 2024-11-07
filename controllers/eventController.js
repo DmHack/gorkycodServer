@@ -2,33 +2,37 @@ const asyncHandler = require("express-async-handler");
 // ------------------
 const Events = require('../models/eventsModels')
 
-const kinoPrint = asyncHandler(async (req, res) => {
+const eventPrint = asyncHandler(async (req, res) => {
     const Event = await Events.find({});
+    const nm = req.body.bdName;
 
     if (Event) {
-        res.status(200).json(Event[0].kino)
+        res.status(200).json(Event[0][nm])
     } else {
-        res.status(200).json({
-            message: "Error kinoPrint"
+        res.status(400).json({
+            message: "Error EventPrint"
         })
     }
 })
 
-const newsPrint = asyncHandler(async (req, res) => {
-    const Event = await Events.find({});
 
-    if (Event) {
-        res.status(200).json(Event[0].news)
+const poiskEvents = asyncHandler(async (req, res) => {
+    const uid = req.body.uid;
+    const bdName = req.body.bdName;
+
+    const event = await Events.findOne({ [`${bdName}.uid`]: uid }, { [`${bdName}.$`]: 1 });
+    if (event) {
+        res.status(200).json(event[bdName][0])
     } else {
-        res.status(200).json({
-            message: "Error newsPrint"
+        res.status(400).json({
+            message: "poisk event error"
         })
     }
 })
-
 
 
 module.exports = {
-    kinoPrint,
-    newsPrint
+    eventPrint,
+    poiskEvents,
+
 }

@@ -1,6 +1,7 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 const asyncHandler = require("express-async-handler");
+const { v4: uuidv4 } = require('uuid');
 // -----------------------------
 const Events = require('../models/eventsModels');
 
@@ -144,7 +145,7 @@ const helpParseNews = asyncHandler(async (urlNews) => {
 
 const parseNews = asyncHandler(async (req, res) => {
     const result = []
-    const url = 'https://nobl.ru/novosti-nizhegorodskoj-oblasti-za-vse-vremya/?page=1'; // Замените на URL первого сайта
+    const url = 'https://nobl.ru/novosti-nizhegorodskoj-oblasti-za-vse-vremya/?page=1';
     const response = await axios.get(url);
     const $ = cheerio.load(response.data);
 
@@ -156,7 +157,6 @@ const parseNews = asyncHandler(async (req, res) => {
     const newsPromises = $site1('.news-page__inner .news-card-common').map(async (index, element) => {
         const title = $site1(element).find('.news-card-common__inner .news-card-common__title').text().trim();
         const tag = $site1(element).find('.news-card-common__inner .news-card-common__tags .tag-common').first().text().trim() || "Новости";
-        console.log(tag);
         const img = `https://nobl.ru${$site1(element).find('.news-card-common__img-wrap picture .news-card-common__img').attr('data-src')}`
 
         const dataNews = `${$site1(element).find('.news-card-common__inner .news-card-common__date-time .news-card-common__date').text().trim()} ${$site1(element).find('.news-card-common__inner .news-card-common__date-time .news-card-common__time').text().trim()}`;
@@ -178,7 +178,8 @@ const parseNews = asyncHandler(async (req, res) => {
         const text = await helpParseNews(item.ssl);
 
         massPolnNews.push({
-            text
+            text,
+            uid: uuidv4()
         })
     }
 
@@ -194,6 +195,163 @@ const parseNews = asyncHandler(async (req, res) => {
         upsert: true,
     });
 })
+// ---------------------------------------------
+
+const parseIt = asyncHandler(async (req, res) => {
+    const result = []
+    const url = 'https://www.it52.info/';
+    const response = await axios.get(url);
+    const $ = cheerio.load(response.data);
+
+    const data = [];
+
+    const { data: site1Data } = await axios.get(url);
+    const $site1 = cheerio.load(site1Data);
+
+    const newsPromises = $site1('.event').map(async (index, element) => {
+        const title = $site1(element).find('.panel-body .row .col-sm-12 .event-header a').text().trim();
+        const date = `${$site1(element).find('.panel-body .row .col-sm-12 .event-subheader span .event-date-inversed .event-day').text().trim()} ${$site1(element).find('.panel-body .row .col-sm-12 .event-subheader span .event-date-inversed .event-time').text().trim()}`;
+        const addr = `${$site1(element).find('.panel-body .row .col-sm-12 .event-subheader span a [itemprop=address]').text().trim()} ${$site1(element).find('.panel-body .row .col-sm-12 .event-subheader span a [itemprop=name]').text().trim()}`;
+        const img = $site1(element).find('.panel-body .row .col-sm-4 a .image-container img').attr('src');
+        const organizator = $site1(element).find('.panel-body .row .col-sm-4 .event-organizer p a').text().trim();
+        const tags = $site1(element).find('.panel-body .row .col-sm-4 .event-tags p a').first().text().trim() || 'IT';
+        const Fulltext = $site1(element).find('.panel-body .row .col-sm-8 .event-description p').text().trim();
+        let upFlText = Fulltext.replace(/\\n/g, '\n').replace(/\[at\]/g, '')
+            .replace(/\[dot\]/g, '')
+            .replace(/\[email\s*protected\]/g, '')
+            .replace(/\s+/g, ' ') // Убираем лишние пробелы
+            .trim();
+        // const uid = JSON.parse($site1(element).find('.movieItem_actions .movieItem_favBtn').attr('data-param')).uid;
+
+        data.push({
+            title,
+            date,
+            addr,
+            img,
+            organizator,
+            tags,
+            upFlText,
+            uid: uuidv4()
+        });
+    })
+
+
+    await Events.findOneAndUpdate({}, {it: data}, {
+        new: true,
+        upsert: true,
+    });
+})
+
+// ---------------------
+
+
+// const parseConcert = asyncHandler(async (req, res) => {
+//     const result = []
+//     const url = 'https://www.afisha.ru/nnovgorod/schedule_concert/na-mesyac/?sort=date';
+//     const response = await axios.get(url);
+//     const $ = cheerio.load(response.data);
+//
+//     const data = [];
+//
+//     const { data: site1Data } = await axios.get(url);
+//     const $site1 = cheerio.load(site1Data);
+//
+//     const newsPromises = $site1('.S52Wl .oP17O').map(async (index, element) => {
+//         const title = $site1(element).attr("title");
+//         const ts = $site1(element).find('.QWR1k ._JP4u').text().trim();
+//         const tag = $site1(element).find('.QWR1k .S_wwn').text().trim();
+//         const img = $site1(element).find('.QsWic .CjnHd .PwMBX img').attr('src');
+//         const ssl = `https://www.afisha.ru${$site1(element).find('.QWR1k .CjnHd').attr('href')}`;
+//
+//         data.push({
+//             title,
+//             ts,
+//             tag,
+//             img,
+//             ssl
+//         });
+//     })
+//     await Events.findOneAndUpdate({}, {concert: data}, {
+//         new: true,
+//         upsert: true,
+//     });
+// })
+//
+
+
+const helpParseConcert = asyncHandler(async (urlNews) => {
+    const url = urlNews; // Замените на URL первого сайта
+    const response = await axios.get(url);
+    const $ = cheerio.load(response.data);
+
+    const data = [];
+
+    const { data: site1Data } = await axios.get(url);
+    const $site1 = cheerio.load(site1Data);
+    const text = $site1('.ui-content .text-sm .content-block div p').text().trim();
+    return text
+})
+
+
+
+const parseConcert = asyncHandler(async (req, res) => {
+    const result = []
+    const url = 'https://nn.kassir.ru/bilety-na-koncert?sort=1';
+    const response = await axios.get(url);
+    const $ = cheerio.load(response.data);
+
+    const data = [];
+
+    const { data: site1Data } = await axios.get(url);
+    const $site1 = cheerio.load(site1Data);
+
+    const newsPromises = $site1('.w-full .gap-x-9  article').map(async (index, element) => {
+        const title = $site1(element).find('.recommendation-item .recommendation-item_text-block .recommendation-item_title').text().trim();
+        const addr = $site1(element).find('.recommendation-item .recommendation-item_text-block .recommendation-item_venue').text().trim();
+        const dataCon = $site1(element).find('.recommendation-item .recommendation-item_text-block .recommendation-item_date span').text().trim();
+        const img = $site1(element).find('.recommendation-item_img-block .recommendation-item_image .ui-picture img').attr('src');
+        const price = $site1(element).find('.recommendation-item_img-block .recommendation-item_features-list .recommendation-item_price-block .rounded-full span').eq(2).text().trim();
+        const ssl = `https://nn.kassir.ru${$site1(element).find('.recommendation-item .recommendation-item_text-block a').eq(0).attr('href')}`;
+
+        // const ssl = `https://www.afisha.ru${$site1(element).find('.QWR1k .CjnHd').attr('href')}`;
+        data.push({
+            title,
+            addr,
+            dataCon,
+            img,
+            price,
+            ssl,
+            uid: uuidv4()
+        });
+    })
+    const massPolnConcert = []
+
+    for (const item of data) {
+        const text = await helpParseConcert(item.ssl);
+
+        massPolnConcert.push({
+            text
+        })
+    }
+
+    for (let i = 0; i < Math.max(massPolnConcert.length, data.length); i++) {
+        const cinemaData = {
+            ...data[i],  // Оператор распространения для включения данных о сеансах
+            ...massPolnConcert[i] // Оператор распространения для включения данных о кинотеатре
+        };
+        result.push(cinemaData);
+    }
+
+
+
+
+
+
+    await Events.findOneAndUpdate({}, {concert: result}, {
+        new: true,
+        upsert: true,
+    });
+})
 
 
 
@@ -203,5 +361,7 @@ const parseNews = asyncHandler(async (req, res) => {
 
 module.exports = {
     parseKinoAfisha,
-    parseNews
+    parseNews,
+    parseIt,
+    parseConcert
 };

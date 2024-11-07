@@ -7,6 +7,12 @@ const eventSchema = mongoose.Schema({
     news: {
         type: [],
     },
+    it: {
+        type: [],
+    },
+    concert: {
+        type: [],
+    }
 })
 
 
