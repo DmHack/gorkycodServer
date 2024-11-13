@@ -140,6 +140,19 @@ const renewAccessToken = asyncHandler(async (req, res) => {
 
 
 
+
+const resetPassword = asyncHandler(async (req, res) => {
+
+})
+
+
+
+
+
+
+
+
+
 const generateAccessToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET_ACCESS, {
         expiresIn: '100m',
