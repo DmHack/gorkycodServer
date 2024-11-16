@@ -22,7 +22,7 @@ app.use('/events', require('./routes/eventRoutes'));
 
 
 
-schedule('0 0 * * *', () => {
+schedule('34 20 * * *', () => {
     console.log('Запуск задачи парсинга данных в 00:00 по Москве');
     parseKinoAfisha()
         .then(data => console.log("Успешное обновление кино".green))

@@ -73,8 +73,7 @@ async function fetchDataFromSecondSite1(uid) {
         const format = $(this).find('.showtimes_format').text().trim();
 
         // Инициализация массивов для sessionsTime и sessionsPrice
-        const sessionsTimeArray = [];
-        const sessionsPriceArray = [];
+        const sessionsTimeAndPrice = [];
 
         // Цикл по каждому сеансу в ячейке
         $(this).find('.showtimes_sessions .showtimes_session').each(function() {
@@ -83,17 +82,15 @@ async function fetchDataFromSecondSite1(uid) {
 
             // Добавление в соответствующие массивы, если данные есть
             if (sessionsTime && sessionsPrice) {
-                sessionsTimeArray.push(sessionsTime);
-                sessionsPriceArray.push(sessionsPrice);
+                sessionsTimeAndPrice.push([sessionsTime, sessionsPrice])
             }
         });
 
         // Добавление в additionalData2 только если есть данные о сеансах
-        if (sessionsTimeArray.length > 0 || sessionsPriceArray.length > 0) {
+        if (sessionsTimeAndPrice.length > 0) {
             additionalData2.push({
                 format,
-                sessionsTime: sessionsTimeArray,
-                sessionsPrice: sessionsPriceArray
+                sessionsTimeAndPrice
             });
         }
     });
