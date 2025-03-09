@@ -155,13 +155,13 @@ const resetPassword = asyncHandler(async (req, res) => {
 
 const generateAccessToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET_ACCESS, {
-        expiresIn: '100m',
+        expiresIn: '30s',
     })
 }
 
 const generateRefreshToken = (id) => {
     return jwt.sign({id}, process.env.JWT_SECRET_REFRESH, {
-        expiresIn: '30d',
+        expiresIn: '1.5m',
     })
 }
 

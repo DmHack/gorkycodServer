@@ -22,7 +22,8 @@ app.use('/events', require('./routes/eventRoutes'));
 
 
 
-schedule('34 20 * * *', () => {
+
+schedule('50 17 * * *', () => {
     console.log('Запуск задачи парсинга данных в 00:00 по Москве');
     parseKinoAfisha()
         .then(data => console.log("Успешное обновление кино".green))
@@ -33,7 +34,7 @@ schedule('34 20 * * *', () => {
     timezone: "Europe/Moscow"
 });
 
-schedule('0 * * * *', () => {
+schedule('50 17 * * *', () => {
     console.log('Запуск задачи парсинга данных каждый час по Москве');
     parseNews()
         .then(data => console.log("Успешное обновление новостей".green))
@@ -64,4 +65,5 @@ schedule('0 * * * *', () => {
 
 app.listen(PORT, () => {
     console.log(`Server started on PORT ${PORT}`.green);
+
 });
